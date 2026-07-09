@@ -3,6 +3,7 @@ import { showConfirm } from "../../confirm.js";
 import { state } from "../../state.js";
 import { formatDate, todayStr } from "../../utils.js";
 import "../../components/doctorSelector.js";
+import "../../components/noteAutocomplete.js";
 
 class MhVaccinations extends LitElement {
   static properties = {
@@ -29,12 +30,14 @@ class MhVaccinations extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this._onLangChange = () => this.requestUpdate();
-    window.addEventListener("languagechange", this._onLangChange);
+    document.addEventListener("language-changed", this._onLangChange);
+    document.addEventListener("translations-loaded", this._onLangChange);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    window.removeEventListener("languagechange", this._onLangChange);
+    document.removeEventListener("language-changed", this._onLangChange);
+    document.removeEventListener("translations-loaded", this._onLangChange);
   }
 
   load(memberId) {
@@ -48,7 +51,7 @@ class MhVaccinations extends LitElement {
   }
 
   #doctorLabel(doctorId) {
-    const lang = window.localization.getLanguage();
+    const lang = window.getLanguage?.() || "en";
     const doctor = state.allDoctors.find((d) => d.Id === doctorId);
     if (!doctor) { return ""; }
     const specialty = lang === "el" ? (doctor.SpecialtyEl || doctor.SpecialtyEn || "") : (doctor.SpecialtyEn || "");
@@ -81,7 +84,7 @@ class MhVaccinations extends LitElement {
   }
 
   async #submitAdd() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     const name     = this.querySelector("#vaxAddName").value.trim();
     const date     = this.querySelector("#vaxAddDate").value;
     const doctorId = this.querySelector("#vaxAddDoctorSel")?.selectedDoctorId ?? "";
@@ -110,7 +113,7 @@ class MhVaccinations extends LitElement {
   }
 
   async #submitEdit() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     const id       = this.querySelector("#vaxEditId").value;
     const name     = this.querySelector("#vaxEditName").value.trim();
     const date     = this.querySelector("#vaxEditDate").value;
@@ -151,7 +154,7 @@ class MhVaccinations extends LitElement {
   }
 
   #renderModalBody(prefix, errors) {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     return html`
       <div class="form-floating mb-3">
         <input type="text" id="${prefix}Name" class="form-control" placeholder="${t("vax.name", "Vaccine Name")}" />
@@ -163,16 +166,19 @@ class MhVaccinations extends LitElement {
       </div>
       <doctor-selector id="${prefix}DoctorSel"
         .labelKey=${"vax.doctor"} .labelFallback=${"Doctor"}></doctor-selector>
-      <div class="form-floating mb-3">
-        <textarea id="${prefix}Notes" class="form-control" placeholder="${t("label.notes", "Notes")}" style="height:70px"></textarea>
-        <label>${t("label.notes", "Notes")}</label>
-      </div>
+      <note-autocomplete
+        id="${prefix}Notes"
+        class="mb-3"
+        label=${t("label.notes", "Notes")}
+        placeholder=${t("label.notes", "Notes")}
+        .suggestions=${[...new Set(state.allVaccinations.map((v) => v.Notes).filter(Boolean))]}
+      ></note-autocomplete>
       ${this.#renderErrors(errors)}
     `;
   }
 
   render() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     return html`
       <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">

@@ -2,6 +2,7 @@ import { LitElement, html } from "../../lib/lit.min.js";
 import { showConfirm } from "../confirm.js";
 import { state } from "../state.js";
 import { normalizeSearch } from "../utils.js";
+import "../components/noteAutocomplete.js";
 
 class DoctorsTab extends LitElement {
   static properties = {
@@ -42,12 +43,14 @@ class DoctorsTab extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this._onLangChange = () => this.requestUpdate();
-    window.addEventListener("languagechange", this._onLangChange);
+    document.addEventListener("language-changed", this._onLangChange);
+    document.addEventListener("translations-loaded", this._onLangChange);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    window.removeEventListener("languagechange", this._onLangChange);
+    document.removeEventListener("language-changed", this._onLangChange);
+    document.removeEventListener("translations-loaded", this._onLangChange);
   }
 
   load() {
@@ -65,7 +68,7 @@ class DoctorsTab extends LitElement {
   }
 
   #specialtyName(doctor) {
-    const lang = window.localization.getLanguage();
+    const lang = window.getLanguage?.() || "en";
     return lang === "el" ? (doctor.SpecialtyEl || doctor.SpecialtyEn || "") : (doctor.SpecialtyEn || "");
   }
 
@@ -132,7 +135,7 @@ class DoctorsTab extends LitElement {
   }
 
   #validateDoctor(data) {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     const errors = [];
     if (!data.FirstName)           { errors.push(t("error.required-first-name", "First name is required.")); }
     if (!data.LastName)            { errors.push(t("error.required-last-name", "Last name is required.")); }
@@ -188,8 +191,8 @@ class DoctorsTab extends LitElement {
   }
 
   #renderSpecialtyDropdown(prefix, isAdd) {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
-    const lang = window.localization.getLanguage();
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
+    const lang = window.getLanguage?.() || "en";
     const searchKey = isAdd ? "_addSpecialtySearch" : "_editSpecialtySearch";
     const selectedKey = isAdd ? "_addSelectedSpecialtyId" : "_editSelectedSpecialtyId";
     const searchVal = this[searchKey];
@@ -239,7 +242,7 @@ class DoctorsTab extends LitElement {
   }
 
   #renderPhonesField(prefix, isAdd) {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     const phonesKey = isAdd ? "_addPhones" : "_editPhones";
     const phones = this[phonesKey];
     return html`
@@ -273,7 +276,7 @@ class DoctorsTab extends LitElement {
   }
 
   #renderModalBody(prefix, saveFlag, errors, isAdd) {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     return html`
       <div class="row g-2 mb-3">
         <div class="col-6">
@@ -299,16 +302,19 @@ class DoctorsTab extends LitElement {
         <input type="text" id="${prefix}DoctorAddress" class="form-control" placeholder="${t("doctors.address", "Address")}" />
         <label><i class="bi bi-geo-alt me-1"></i>${t("doctors.address", "Address")}</label>
       </div>
-      <div class="form-floating mb-3">
-        <textarea id="${prefix}DoctorNotes" class="form-control" placeholder="${t("doctors.notes", "Notes")}" style="height:80px"></textarea>
-        <label>${t("doctors.notes", "Notes")}</label>
-      </div>
+      <note-autocomplete
+        id="${prefix}DoctorNotes"
+        class="mb-3"
+        label=${t("doctors.notes", "Notes")}
+        placeholder=${t("doctors.notes", "Notes")}
+        .suggestions=${[...new Set(state.allDoctors.map((d) => d.Notes).filter(Boolean))]}
+      ></note-autocomplete>
       ${this.#renderErrors(errors)}
     `;
   }
 
   #renderAddModal() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     return html`
       <div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="addDoctorModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
@@ -329,7 +335,7 @@ class DoctorsTab extends LitElement {
   }
 
   #renderEditModal() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     return html`
       <div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="editDoctorModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
@@ -353,7 +359,7 @@ class DoctorsTab extends LitElement {
   }
 
   render() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     const list = this.#filtered();
     return html`
       <div class="card">

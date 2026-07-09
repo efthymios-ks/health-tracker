@@ -28,12 +28,14 @@ class DoctorSelector extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this._onLangChange = () => this.requestUpdate();
-    window.addEventListener("languagechange", this._onLangChange);
+    document.addEventListener("language-changed", this._onLangChange);
+    document.addEventListener("translations-loaded", this._onLangChange);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    window.removeEventListener("languagechange", this._onLangChange);
+    document.removeEventListener("language-changed", this._onLangChange);
+    document.removeEventListener("translations-loaded", this._onLangChange);
   }
 
   reset(doctorId = "") {
@@ -48,8 +50,8 @@ class DoctorSelector extends LitElement {
   }
 
   render() {
-    const t    = (key, fallback) => window.localization?.t(key) ?? fallback;
-    const lang = window.localization.getLanguage();
+    const t    = (key, fallback) => window.t?.(key, fallback) ?? fallback;
+    const lang = window.getLanguage?.() || "en";
     const specialties = state.allDoctorSpecialties;
     const filter      = this._specialtyFilter;
     const searchVal   = this._specialtySearch;
@@ -66,7 +68,6 @@ class DoctorSelector extends LitElement {
       ? state.allDoctors
       : state.allDoctors.filter((d) => filter.has(d.SpecialtyId));
 
-    // Ensure selection is always valid
     const selectedId = (this.optional && this.selectedDoctorId === "") || doctors.find((d) => d.Id === this.selectedDoctorId)
       ? this.selectedDoctorId
       : (this.selectedDoctorId = this.optional ? "" : (doctors[0]?.Id || ""));

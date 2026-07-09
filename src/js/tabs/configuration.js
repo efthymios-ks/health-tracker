@@ -49,12 +49,14 @@ class BilingualLookupSection extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this._onLangChange = () => this.requestUpdate();
-    window.addEventListener("languagechange", this._onLangChange);
+    document.addEventListener("language-changed", this._onLangChange);
+    document.addEventListener("translations-loaded", this._onLangChange);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    window.removeEventListener("languagechange", this._onLangChange);
+    document.removeEventListener("language-changed", this._onLangChange);
+    document.removeEventListener("translations-loaded", this._onLangChange);
   }
 
   load() {
@@ -71,7 +73,7 @@ class BilingualLookupSection extends LitElement {
   }
 
   #displayName(item) {
-    const lang = window.localization.getLanguage();
+    const lang = window.getLanguage?.() || "en";
     return lang === "el" ? (item.El || item.En || item.Id) : (item.En || item.Id);
   }
 
@@ -108,7 +110,7 @@ class BilingualLookupSection extends LitElement {
   }
 
   async #submitAdd() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     const enEl = this.querySelector(`#add-${this.section}-en`);
     const elEl = this.querySelector(`#add-${this.section}-el`);
     const idEl = this.querySelector(`#add-${this.section}-id`);
@@ -141,7 +143,7 @@ class BilingualLookupSection extends LitElement {
   }
 
   async #submitEdit() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     const id = this.querySelector(`#edit-${this.section}-id`).value;
     const en = this.querySelector(`#edit-${this.section}-en`).value.trim();
     const el = this.querySelector(`#edit-${this.section}-el`).value.trim();
@@ -186,7 +188,7 @@ class BilingualLookupSection extends LitElement {
   }
 
   render() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     const list = this.#filtered();
     const s = this.section;
 
@@ -312,12 +314,14 @@ class SettingsTab extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this._onLangChange = () => this.requestUpdate();
-    window.addEventListener("languagechange", this._onLangChange);
+    document.addEventListener("language-changed", this._onLangChange);
+    document.addEventListener("translations-loaded", this._onLangChange);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    window.removeEventListener("languagechange", this._onLangChange);
+    document.removeEventListener("language-changed", this._onLangChange);
+    document.removeEventListener("translations-loaded", this._onLangChange);
   }
 
   load() {
@@ -328,7 +332,7 @@ class SettingsTab extends LitElement {
   }
 
   render() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
 
     const sections = [
       {

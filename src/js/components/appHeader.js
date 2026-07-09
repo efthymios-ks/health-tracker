@@ -8,12 +8,6 @@ const TABS = [
   { name: "settings",     key: "nav.settings",     label: "Settings",     icon: "bi-gear" },
 ];
 
-// Available languages. Add more by creating localization.{code}.json files.
-const LANGUAGES = [
-  { code: "en", label: "English" },
-  { code: "el", label: "Ελληνικά" },
-];
-
 const navItem = (tab, currentLanguage, { dismiss = false } = {}) => html`
   <a
     href="#"
@@ -21,7 +15,7 @@ const navItem = (tab, currentLanguage, { dismiss = false } = {}) => html`
     data-tab="${tab.name}"
     data-bs-dismiss=${dismiss ? "offcanvas" : nothing}
     @click=${(event) => { event.preventDefault(); window.showTab(tab.name); }}
-  >${window.localization?.t(tab.key) ?? tab.label}</a>
+  >${window.t?.(tab.key, tab.label) ?? tab.label}</a>
 `;
 
 class AppHeader extends LitElement {
@@ -31,27 +25,33 @@ class AppHeader extends LitElement {
 
   constructor() {
     super();
-    this._currentLanguage = window.localization.getLanguage();
+    this._currentLanguage = window.getLanguage?.() || "en";
   }
 
   connectedCallback() {
     super.connectedCallback();
-    this._onLangChange = (event) => { this._currentLanguage = event.detail.lang; };
-    window.addEventListener("languagechange", this._onLangChange);
+    this._onLangChange = (event) => {
+      this._currentLanguage = event.detail?.code || window.getLanguage?.() || "en";
+      this.requestUpdate();
+    };
+    document.addEventListener("language-changed", this._onLangChange);
+    document.addEventListener("translations-loaded", this._onLangChange);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    window.removeEventListener("languagechange", this._onLangChange);
+    document.removeEventListener("language-changed", this._onLangChange);
+    document.removeEventListener("translations-loaded", this._onLangChange);
   }
 
   createRenderRoot() { return this; }
 
-  async #onLangSelect(event) {
-    await window.localization.setLanguage(event.target.value);
+  #onLangSelect(event) {
+    window.setLanguage?.(event.target.value);
   }
 
   #renderLangSelector() {
+    const languages = window.getLanguages?.() || [];
     return html`
       <div class="px-2 pb-3 mt-auto">
         <select
@@ -59,7 +59,7 @@ class AppHeader extends LitElement {
           .value=${this._currentLanguage}
           @change=${this.#onLangSelect}
         >
-          ${LANGUAGES.map((languageOption) => html`
+          ${languages.map((languageOption) => html`
             <option
               value="${languageOption.code}"
               .selected=${languageOption.code === this._currentLanguage}
@@ -72,6 +72,7 @@ class AppHeader extends LitElement {
 
   render() {
     const currentLanguage = this._currentLanguage;
+    const languages = window.getLanguages?.() || [];
     return html`
       <!-- Desktop Sidebar -->
       <nav
@@ -79,7 +80,7 @@ class AppHeader extends LitElement {
         style="width: 220px"
       >
         <div class="px-3 py-3 fw-bold text-white border-bottom border-white border-opacity-25 small">
-          🏥 ${window.localization?.t("app.title") ?? "Health Tracker"}
+          🏥 Health Tracker
         </div>
         <div class="navbar-nav flex-column p-2 flex-grow-1 gap-1">
           ${TABS.map((tab) => navItem(tab, currentLanguage))}
@@ -94,7 +95,7 @@ class AppHeader extends LitElement {
         id="mobileOffcanvas"
       >
         <div class="offcanvas-header border-bottom border-white border-opacity-25">
-          <h6 class="offcanvas-title fw-bold text-white">🏥 ${window.localization?.t("app.title") ?? "Health Tracker"}</h6>
+          <h6 class="offcanvas-title fw-bold text-white">🏥 Health Tracker</h6>
           <button
             type="button"
             class="btn-close btn-close-white"
@@ -111,7 +112,7 @@ class AppHeader extends LitElement {
               .value=${this._currentLanguage}
               @change=${this.#onLangSelect}
             >
-              ${LANGUAGES.map((languageOption) => html`
+              ${languages.map((languageOption) => html`
                 <option
                   value="${languageOption.code}"
                   .selected=${languageOption.code === this._currentLanguage}
@@ -128,7 +129,7 @@ class AppHeader extends LitElement {
         style="z-index: 1030"
       >
         <div class="container-fluid">
-          <span class="navbar-brand fw-bold">🏥 ${window.localization?.t("app.title") ?? "Health Tracker"}</span>
+          <span class="navbar-brand fw-bold">🏥 Health Tracker</span>
           <button
             class="navbar-toggler border-0"
             type="button"

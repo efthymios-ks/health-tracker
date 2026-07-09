@@ -1,4 +1,4 @@
-const SHEETS_BASE = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SPREADSHEET_ID}`;
+const SHEETS_BASE = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.dataSource.id}`;
 
 let _sheetIdMap = {};
 let _columnIndexMap = {};
@@ -150,7 +150,7 @@ async function sheetsGetRowIndexById(sheetName, idValue) {
 }
 
 async function sheetsRequest(url, options = {}) {
-  const token = window.auth.getToken();
+  const token = window.auth.getAccessToken();
   const response = await fetch(url, {
     ...options,
     headers: {

@@ -38,12 +38,14 @@ class MembersTab extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this._onLangChange = () => this.requestUpdate();
-    window.addEventListener("languagechange", this._onLangChange);
+    document.addEventListener("language-changed", this._onLangChange);
+    document.addEventListener("translations-loaded", this._onLangChange);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    window.removeEventListener("languagechange", this._onLangChange);
+    document.removeEventListener("language-changed", this._onLangChange);
+    document.removeEventListener("translations-loaded", this._onLangChange);
   }
 
   load() { this._members = state.allMembers; }
@@ -71,7 +73,7 @@ class MembersTab extends LitElement {
   }
 
   #cfValidate(rows) {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     for (const row of rows) {
       const hasKey = row.key.trim() !== "";
       const hasValue = row.value.trim() !== "";
@@ -125,7 +127,7 @@ class MembersTab extends LitElement {
   }
 
   async #submitAdd() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     const firstName = this.querySelector("#addMemberFirstName").value.trim();
     const lastName = this.querySelector("#addMemberLastName").value.trim();
     const errors = [];
@@ -157,7 +159,7 @@ class MembersTab extends LitElement {
   }
 
   async #submitEdit() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     const id = this.querySelector("#editMemberId").value;
     const firstName = this.querySelector("#editMemberFirstName").value.trim();
     const lastName = this.querySelector("#editMemberLastName").value.trim();
@@ -245,7 +247,7 @@ class MembersTab extends LitElement {
   }
 
   #renderAddModal() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     const onCfUpdate = (rowIndex, field, value) => { this._addCustomFields = this._addCustomFields.map((row, i) => i === rowIndex ? { ...row, [field]: value } : row); };
     const onCfAdd = () => { this._addCustomFields = [...this._addCustomFields, { key: "", value: "" }]; };
     const onCfRemove = (rowIndex) => { this._addCustomFields = this._addCustomFields.filter((_, i) => i !== rowIndex); };
@@ -319,7 +321,7 @@ class MembersTab extends LitElement {
   }
 
   #renderEditModal() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     const onCfUpdate = (rowIndex, field, value) => { this._editCustomFields = this._editCustomFields.map((row, i) => i === rowIndex ? { ...row, [field]: value } : row); };
     const onCfAdd = () => { this._editCustomFields = [...this._editCustomFields, { key: "", value: "" }]; };
     const onCfRemove = (rowIndex) => { this._editCustomFields = this._editCustomFields.filter((_, i) => i !== rowIndex); };
@@ -394,7 +396,7 @@ class MembersTab extends LitElement {
   }
 
   render() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     const list = this.#filtered();
     return html`
       <div class="card">

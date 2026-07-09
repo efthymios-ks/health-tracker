@@ -17,9 +17,9 @@
       style="z-index: 9999">
       <div class="text-center">
         <div class="mb-3 fs-1">🏥</div>
-        <h4 class="mb-4" data-localization-key="app.title">Health Tracker</h4>
+        <h4 class="mb-4" data-translations-key="app.title">Health Tracker</h4>
         <button id="signInBtn" class="btn btn-outline-secondary btn-lg">
-          <i class="bi bi-google me-2"></i><span data-localization-key="app.sign-in">Sign in with Google</span>
+          <i class="bi bi-google me-2"></i><span data-translations-key="app.sign-in">Sign in with Google</span>
         </button>
       </div>
     </div>
@@ -37,7 +37,7 @@
             </div>
             <div id="loadingErrorSection" class="d-none d-flex flex-column align-items-center">
               <i class="bi bi-exclamation-circle text-danger d-block mb-2" style="font-size: 2.5rem"></i>
-              <h5 class="text-danger" data-localization-key="loading.failed">Loading Failed</h5>
+              <h5 class="text-danger" data-translations-key="loading.failed">Loading Failed</h5>
               <p id="loadingErrorMessage" class="text-muted mb-0"></p>
             </div>
           </div>
@@ -70,12 +70,12 @@
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="confirmModalTitle"
-              data-localization-key="confirm.delete-title">Confirm Delete</h5>
+              data-translations-key="confirm.delete-title">Confirm Delete</h5>
           </div>
           <div class="modal-body" id="confirmModalBody"></div>
           <div class="modal-footer">
             <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal"
-              data-localization-key="confirm.cancel">Cancel</button>
+              data-translations-key="confirm.cancel">Cancel</button>
             <button class="btn btn-sm" id="confirmModalActionBtn"></button>
           </div>
         </div>
@@ -85,7 +85,6 @@
     <script src="lib/bootstrap.bundle.min.js"></script>
     <script src="config.js"></script>
     <script src="config.local.js" onerror="void 0"></script>
-    <script src="js/localization.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/sheets.js"></script>
     <script src="js/api.js"></script>

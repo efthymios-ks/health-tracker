@@ -1,3 +1,4 @@
+import "./translations.js";
 import "./components/appHeader.js";
 import "./components/loadingOverlay.js";
 import { state } from "./state.js";
@@ -65,7 +66,6 @@ window.showTab = showTab;
 window.refreshCurrentTab = refreshCurrentTab;
 window.setLoading = setLoading;
 
-window.onload = async () => {
-  await window.localization.init();
-  window.auth.initAuth(onAuthReady);
+window.onload = () => {
+  window.auth.login(onAuthReady);
 };

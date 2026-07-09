@@ -2,6 +2,7 @@ import { LitElement, html } from "../../../lib/lit.min.js";
 import { showConfirm } from "../../confirm.js";
 import { state } from "../../state.js";
 import { formatDate, todayStr } from "../../utils.js";
+import "../../components/noteAutocomplete.js";
 
 class MhDiagnosticTests extends LitElement {
   static properties = {
@@ -34,12 +35,14 @@ class MhDiagnosticTests extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this._onLangChange = () => this.requestUpdate();
-    window.addEventListener("languagechange", this._onLangChange);
+    document.addEventListener("language-changed", this._onLangChange);
+    document.addEventListener("translations-loaded", this._onLangChange);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    window.removeEventListener("languagechange", this._onLangChange);
+    document.removeEventListener("language-changed", this._onLangChange);
+    document.removeEventListener("translations-loaded", this._onLangChange);
   }
 
   load(memberId) {
@@ -67,7 +70,7 @@ class MhDiagnosticTests extends LitElement {
   }
 
   #doctorLabel(doctorId) {
-    const lang = window.localization.getLanguage();
+    const lang = window.getLanguage?.() || "en";
     const doctor = state.allDoctors.find((d) => d.Id === doctorId);
     if (!doctor) { return ""; }
     const specialty = lang === "el" ? (doctor.SpecialtyEl || doctor.SpecialtyEn || "") : (doctor.SpecialtyEn || "");
@@ -114,7 +117,7 @@ class MhDiagnosticTests extends LitElement {
   }
 
   async #submitAdd() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     const data = this.#collectData("testAdd", this._addResults);
     const errors = [];
     if (!data.TestType)           { errors.push(t("error.required-test-type", "Test type is required.")); }
@@ -136,7 +139,7 @@ class MhDiagnosticTests extends LitElement {
   }
 
   async #submitEdit() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     const id   = this.querySelector("#testEditId").value;
     const data = this.#collectData("testEdit", this._editResults);
     const errors = [];
@@ -217,7 +220,7 @@ class MhDiagnosticTests extends LitElement {
   }
 
   #renderModalBody(prefix, results, onResultUpdate, onResultAdd, onResultRemove, errors) {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     return html`
       <div class="form-floating mb-3">
         <input type="text" id="${prefix}Type" class="form-control" placeholder="${t("test.type", "Test Type")}" />
@@ -235,16 +238,19 @@ class MhDiagnosticTests extends LitElement {
         <label><i class="bi bi-person-badge me-1"></i>${t("test.ordered-by", "Ordered By")}</label>
       </div>
       ${this.#renderResultsEditor(results, onResultUpdate, onResultAdd, onResultRemove, t)}
-      <div class="form-floating mb-3">
-        <textarea id="${prefix}Notes" class="form-control" placeholder="${t("label.notes", "Notes")}" style="height:70px"></textarea>
-        <label>${t("label.notes", "Notes")}</label>
-      </div>
+      <note-autocomplete
+        id="${prefix}Notes"
+        class="mb-3"
+        label=${t("label.notes", "Notes")}
+        placeholder=${t("label.notes", "Notes")}
+        .suggestions=${[...new Set(state.allDiagnosticTests.map((dt) => dt.Notes).filter(Boolean))]}
+      ></note-autocomplete>
       ${this.#renderErrors(errors)}
     `;
   }
 
   render() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
 
     const emptyResult = () => ({ name: "", value: "", unit: "", rangeMin: "", rangeMax: "" });
     const onAddUpdate  = (i, f, v) => { this._addResults  = this._addResults.map((r, idx)  => idx === i ? { ...r, [f]: v } : r); };

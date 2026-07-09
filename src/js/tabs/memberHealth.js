@@ -35,17 +35,19 @@ class MemberHealthTab extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this._onLangChange = () => this.requestUpdate();
-    window.addEventListener("languagechange", this._onLangChange);
+    document.addEventListener("language-changed", this._onLangChange);
+    document.addEventListener("translations-loaded", this._onLangChange);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    window.removeEventListener("languagechange", this._onLangChange);
+    document.removeEventListener("language-changed", this._onLangChange);
+    document.removeEventListener("translations-loaded", this._onLangChange);
   }
 
   load() {
     if (!this._selectedMemberId && state.allMembers.length) {
-      const currentEmail = window.currentUser?.email;
+      const currentEmail = window.auth.getUser()?.email;
       const match = currentEmail
         ? state.allMembers.find((m) => m.Emails.includes(currentEmail))
         : null;
@@ -72,7 +74,7 @@ class MemberHealthTab extends LitElement {
   }
 
   render() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     const members = state.allMembers;
 
     return html`

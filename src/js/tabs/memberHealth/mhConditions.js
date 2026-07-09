@@ -4,6 +4,7 @@ import { state } from "../../state.js";
 import { formatDate, todayStr } from "../../utils.js";
 import "../../components/doctorSelector.js";
 import "../../components/conditionSelector.js";
+import "../../components/noteAutocomplete.js";
 
 class MhConditions extends LitElement {
   static properties = {
@@ -36,12 +37,14 @@ class MhConditions extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this._onLangChange = () => this.requestUpdate();
-    window.addEventListener("languagechange", this._onLangChange);
+    document.addEventListener("language-changed", this._onLangChange);
+    document.addEventListener("translations-loaded", this._onLangChange);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    window.removeEventListener("languagechange", this._onLangChange);
+    document.removeEventListener("language-changed", this._onLangChange);
+    document.removeEventListener("translations-loaded", this._onLangChange);
   }
 
   load(memberId) {
@@ -55,14 +58,14 @@ class MhConditions extends LitElement {
   }
 
   #conditionName(conditionId) {
-    const lang = window.localization.getLanguage();
+    const lang = window.getLanguage?.() || "en";
     const cond = state.allMedicalConditions.find((c) => c.Id === conditionId);
     if (!cond) { return conditionId || "—"; }
     return lang === "el" ? (cond.El || cond.En) : cond.En;
   }
 
   #doctorLabel(doctorId) {
-    const lang = window.localization.getLanguage();
+    const lang = window.getLanguage?.() || "en";
     const doctor = state.allDoctors.find((d) => d.Id === doctorId);
     if (!doctor) { return ""; }
     const specialty = lang === "el" ? (doctor.SpecialtyEl || doctor.SpecialtyEn || "") : (doctor.SpecialtyEn || "");
@@ -70,7 +73,7 @@ class MhConditions extends LitElement {
   }
 
   #apptLabel(appt) {
-    const lang    = window.localization.getLanguage();
+    const lang    = window.getLanguage?.() || "en";
     const doctor  = state.allDoctors.find((d) => d.Id === appt.DoctorId);
     if (!doctor) { return formatDate(appt.DateOfAppointmentUtc); }
     const specialty = lang === "el" ? (doctor.SpecialtyEl || doctor.SpecialtyEn || "") : (doctor.SpecialtyEn || "");
@@ -133,7 +136,7 @@ class MhConditions extends LitElement {
   }
 
   async #submitAdd() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     const data = this.#collectData("condAdd", this._addApptId);
     const errors = [];
     if (!data.MedicalConditionId) { errors.push(t("error.required-condition", "Medical condition is required.")); }
@@ -153,7 +156,7 @@ class MhConditions extends LitElement {
   }
 
   async #submitEdit() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     const id   = this.querySelector("#condEditId").value;
     const data = this.#collectData("condEdit", this._editApptId);
     const errors = [];
@@ -185,16 +188,20 @@ class MhConditions extends LitElement {
   }
 
   #renderModalBody(prefix, apptId, onApptChange, errors) {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     const memberAppts = this.#memberAppts();
     const lockedAppt  = apptId ? state.allDoctorAppointments.find((a) => a.Id === apptId) : null;
 
     return html`
       <condition-selector id="${prefix}ConditionSel"></condition-selector>
-      <div class="form-floating mb-3">
-        <textarea id="${prefix}Symptoms" class="form-control" placeholder="${t("cond.symptoms", "Symptoms")}" style="height:70px"></textarea>
-        <label>${t("cond.symptoms", "Symptoms")}</label>
-      </div>
+      <note-autocomplete
+        id="${prefix}Symptoms"
+        class="mb-3"
+        icon="bi-clipboard-heart"
+        label=${t("cond.symptoms", "Symptoms")}
+        placeholder=${t("cond.symptoms", "Symptoms")}
+        .suggestions=${[...new Set(state.allDiagnoses.map((d) => d.Symptoms).filter(Boolean))]}
+      ></note-autocomplete>
       <div class="form-floating mb-3">
         <select id="${prefix}Appt" class="form-select" @change=${onApptChange}>
           <option value="">—</option>
@@ -230,7 +237,7 @@ class MhConditions extends LitElement {
   }
 
   render() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
 
     const onAddApptChange  = (e) => { this._addApptId  = e.target.value; };
     const onEditApptChange = (e) => { this._editApptId = e.target.value; };

@@ -2,47 +2,34 @@ let _accessToken = null;
 let _tokenClient = null;
 const STORAGE_KEY = "ht_auth";
 
-function saveToken(tokenResponse) {
+function saveAuth(tokenResponse, userInfo) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({
     access_token: tokenResponse.access_token,
     expires_at: Date.now() + tokenResponse.expires_in * 1000,
+    user: userInfo,
   }));
 }
 
-function loadToken() {
-  try {
-    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (stored && stored.expires_at - Date.now() > 60_000) { return stored.access_token; }
-  } catch {}
-  return null;
+function loadStoredAuth() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch { return null; }
 }
 
-function saveEmail(email) {
-  localStorage.setItem(STORAGE_KEY + "_email", email);
-}
-
-function getEmail() {
-  return localStorage.getItem(STORAGE_KEY + "_email") || null;
-}
-
-function clearToken() {
+function clearAuth() {
   localStorage.removeItem(STORAGE_KEY);
-  localStorage.removeItem(STORAGE_KEY + "_email");
 }
 
 async function onTokenReceived(tokenResponse, onReady) {
   _accessToken = tokenResponse.access_token;
-  saveToken(tokenResponse);
 
   const userResponse = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
     headers: { Authorization: `Bearer ${_accessToken}` },
   });
   const userInfo = await userResponse.json();
 
-  saveEmail(userInfo.email);
+  saveAuth(tokenResponse, userInfo);
 
   if (!CONFIG.ALLOWED_EMAILS.includes(userInfo.email)) {
-    clearToken();
+    clearAuth();
     window.location.href = `401.html?email=${encodeURIComponent(userInfo.email)}`;
     return;
   }
@@ -52,10 +39,10 @@ async function onTokenReceived(tokenResponse, onReady) {
   onReady();
 }
 
-function initAuth(onReady) {
-  const cached = loadToken();
-  if (cached) {
-    _accessToken = cached;
+function login(onReady) {
+  const stored = loadStoredAuth();
+  if (stored && stored.expires_at - Date.now() > 60_000) {
+    _accessToken = stored.access_token;
     document.getElementById("authOverlay").classList.replace("d-flex", "d-none");
     document.getElementById("mainContent").classList.remove("d-none");
     onReady();
@@ -96,8 +83,18 @@ function initAuth(onReady) {
   waitForGIS();
 }
 
-function getToken() {
+function logout() {
+  clearAuth();
+  _accessToken = null;
+  window.location.reload();
+}
+
+function getUser() {
+  return loadStoredAuth()?.user || null;
+}
+
+function getAccessToken() {
   return _accessToken;
 }
 
-window.auth = { initAuth, getToken, getEmail };
+window.auth = { login, logout, getUser, getAccessToken };

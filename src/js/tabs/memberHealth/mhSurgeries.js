@@ -3,6 +3,7 @@ import { showConfirm } from "../../confirm.js";
 import { state } from "../../state.js";
 import { formatDate, todayStr } from "../../utils.js";
 import "../../components/doctorSelector.js";
+import "../../components/noteAutocomplete.js";
 
 class MhSurgeries extends LitElement {
   static properties = {
@@ -29,12 +30,14 @@ class MhSurgeries extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this._onLangChange = () => this.requestUpdate();
-    window.addEventListener("languagechange", this._onLangChange);
+    document.addEventListener("language-changed", this._onLangChange);
+    document.addEventListener("translations-loaded", this._onLangChange);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    window.removeEventListener("languagechange", this._onLangChange);
+    document.removeEventListener("language-changed", this._onLangChange);
+    document.removeEventListener("translations-loaded", this._onLangChange);
   }
 
   load(memberId) {
@@ -48,7 +51,7 @@ class MhSurgeries extends LitElement {
   }
 
   #doctorLabel(doctorId) {
-    const lang = window.localization.getLanguage();
+    const lang = window.getLanguage?.() || "en";
     const doctor = state.allDoctors.find((d) => d.Id === doctorId);
     if (!doctor) { return ""; }
     const specialty = lang === "el" ? (doctor.SpecialtyEl || doctor.SpecialtyEn || "") : (doctor.SpecialtyEn || "");
@@ -81,7 +84,7 @@ class MhSurgeries extends LitElement {
   }
 
   async #submitAdd() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     const name     = this.querySelector("#surgeryAddName").value.trim();
     const date     = this.querySelector("#surgeryAddDate").value;
     const doctorId = this.querySelector("#surgeryAddDoctorSel")?.selectedDoctorId ?? "";
@@ -110,7 +113,7 @@ class MhSurgeries extends LitElement {
   }
 
   async #submitEdit() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     const id       = this.querySelector("#surgeryEditId").value;
     const name     = this.querySelector("#surgeryEditName").value.trim();
     const date     = this.querySelector("#surgeryEditDate").value;
@@ -151,7 +154,7 @@ class MhSurgeries extends LitElement {
   }
 
   #renderModalBody(prefix, errors) {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     return html`
       <div class="form-floating mb-3">
         <input type="text" id="${prefix}Name" class="form-control" placeholder="${t("surgery.name", "Surgery Name")}" />
@@ -163,16 +166,19 @@ class MhSurgeries extends LitElement {
       </div>
       <doctor-selector id="${prefix}DoctorSel"
         .labelKey=${"surgery.doctors"} .labelFallback=${"Surgeon"}></doctor-selector>
-      <div class="form-floating mb-3">
-        <textarea id="${prefix}Notes" class="form-control" placeholder="${t("label.notes", "Notes")}" style="height:70px"></textarea>
-        <label>${t("label.notes", "Notes")}</label>
-      </div>
+      <note-autocomplete
+        id="${prefix}Notes"
+        class="mb-3"
+        label=${t("label.notes", "Notes")}
+        placeholder=${t("label.notes", "Notes")}
+        .suggestions=${[...new Set(state.allSurgeries.map((s) => s.Notes).filter(Boolean))]}
+      ></note-autocomplete>
       ${this.#renderErrors(errors)}
     `;
   }
 
   render() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     return html`
       <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">

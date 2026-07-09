@@ -8,12 +8,14 @@ class DashboardTab extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this._onLangChange = () => this.requestUpdate();
-    window.addEventListener("languagechange", this._onLangChange);
+    document.addEventListener("language-changed", this._onLangChange);
+    document.addEventListener("translations-loaded", this._onLangChange);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    window.removeEventListener("languagechange", this._onLangChange);
+    document.removeEventListener("language-changed", this._onLangChange);
+    document.removeEventListener("translations-loaded", this._onLangChange);
   }
 
   load() { this.requestUpdate(); }
@@ -27,14 +29,14 @@ class DashboardTab extends LitElement {
   }
 
   #doctorSpecialty(doctorId) {
-    const lang = window.localization.getLanguage();
+    const lang = window.getLanguage?.() || "en";
     const doc = state.allDoctors.find((d) => d.Id === doctorId);
     if (!doc) { return ""; }
     return lang === "el" ? (doc.SpecialtyEl || doc.SpecialtyEn || "") : (doc.SpecialtyEn || "");
   }
 
   #conditionName(conditionId) {
-    const lang = window.localization.getLanguage();
+    const lang = window.getLanguage?.() || "en";
     const cond = state.allMedicalConditions.find((c) => c.Id === conditionId);
     if (!cond) { return conditionId || "—"; }
     return lang === "el" ? (cond.El || cond.En) : cond.En;
@@ -62,7 +64,7 @@ class DashboardTab extends LitElement {
   }
 
   render() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     const appointments = this.#upcomingAppointments();
     const prescriptions = this.#activePrescriptions();
     const conditions = this.#recentConditions();

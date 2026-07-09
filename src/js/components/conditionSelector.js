@@ -21,12 +21,14 @@ class ConditionSelector extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this._onLangChange = () => this.requestUpdate();
-    window.addEventListener("languagechange", this._onLangChange);
+    document.addEventListener("language-changed", this._onLangChange);
+    document.addEventListener("translations-loaded", this._onLangChange);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    window.removeEventListener("languagechange", this._onLangChange);
+    document.removeEventListener("language-changed", this._onLangChange);
+    document.removeEventListener("translations-loaded", this._onLangChange);
   }
 
   reset(conditionId = "") {
@@ -36,8 +38,8 @@ class ConditionSelector extends LitElement {
   }
 
   render() {
-    const t    = (key, fallback) => window.localization?.t(key) ?? fallback;
-    const lang = window.localization.getLanguage();
+    const t    = (key, fallback) => window.t?.(key, fallback) ?? fallback;
+    const lang = window.getLanguage?.() || "en";
 
     const filtered = this._search
       ? state.allMedicalConditions.filter((c) =>

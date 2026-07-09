@@ -3,6 +3,7 @@ import { showConfirm } from "../../confirm.js";
 import { state } from "../../state.js";
 import { formatDate, nowDatetimeLocal, toDatetimeLocal } from "../../utils.js";
 import "../../components/doctorSelector.js";
+import "../../components/noteAutocomplete.js";
 
 class MhAppointments extends LitElement {
   static properties = {
@@ -31,12 +32,14 @@ class MhAppointments extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this._onLangChange = () => this.requestUpdate();
-    window.addEventListener("languagechange", this._onLangChange);
+    document.addEventListener("language-changed", this._onLangChange);
+    document.addEventListener("translations-loaded", this._onLangChange);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    window.removeEventListener("languagechange", this._onLangChange);
+    document.removeEventListener("language-changed", this._onLangChange);
+    document.removeEventListener("translations-loaded", this._onLangChange);
   }
 
   load(memberId) {
@@ -52,7 +55,7 @@ class MhAppointments extends LitElement {
   #doctorLabel(doctorId) {
     const doctor = state.allDoctors.find((d) => d.Id === doctorId);
     if (!doctor) { return ""; }
-    const lang = window.localization.getLanguage();
+    const lang = window.getLanguage?.() || "en";
     const specialty = lang === "el" ? (doctor.SpecialtyEl || doctor.SpecialtyEn || "") : (doctor.SpecialtyEn || "");
     return specialty ? `${doctor.FullName} — ${specialty}` : doctor.FullName;
   }
@@ -64,7 +67,7 @@ class MhAppointments extends LitElement {
   #doctorSpecialty(doctorId) {
     const doctor = state.allDoctors.find((d) => d.Id === doctorId);
     if (!doctor) { return ""; }
-    const lang = window.localization.getLanguage();
+    const lang = window.getLanguage?.() || "en";
     return lang === "el" ? (doctor.SpecialtyEl || doctor.SpecialtyEn || "") : (doctor.SpecialtyEn || "");
   }
 
@@ -94,7 +97,7 @@ class MhAppointments extends LitElement {
   }
 
   async #submitAdd() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     const date     = this.querySelector("#apptAddDate").value;
     const reason   = this.querySelector("#apptAddReason").value.trim();
     const doctorId = this.querySelector("#apptAddDoctorSel")?.selectedDoctorId ?? "";
@@ -122,7 +125,7 @@ class MhAppointments extends LitElement {
   }
 
   async #submitEdit() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     const id       = this.querySelector("#apptEditId").value;
     const date     = this.querySelector("#apptEditDate").value;
     const reason   = this.querySelector("#apptEditReason").value.trim();
@@ -162,7 +165,7 @@ class MhAppointments extends LitElement {
   }
 
   #renderModalBody(prefix, errors) {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     return html`
       <div class="form-floating mb-3">
         <input type="datetime-local" id="${prefix}Date" class="form-control" placeholder="${t("appt.date", "Date")}" />
@@ -173,16 +176,19 @@ class MhAppointments extends LitElement {
         <textarea id="${prefix}Reason" class="form-control" placeholder="${t("appt.reason", "Reason")}" style="height:80px"></textarea>
         <label>${t("appt.reason", "Reason")}</label>
       </div>
-      <div class="form-floating mb-3">
-        <textarea id="${prefix}Notes" class="form-control" placeholder="${t("label.notes", "Notes")}" style="height:80px"></textarea>
-        <label>${t("label.notes", "Notes")}</label>
-      </div>
+      <note-autocomplete
+        id="${prefix}Notes"
+        class="mb-3"
+        label=${t("label.notes", "Notes")}
+        placeholder=${t("label.notes", "Notes")}
+        .suggestions=${[...new Set(state.allDoctorAppointments.map((a) => a.Notes).filter(Boolean))]}
+      ></note-autocomplete>
       ${this.#renderErrors(errors)}
     `;
   }
 
   render() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     return html`
       <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">

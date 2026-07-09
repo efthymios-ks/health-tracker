@@ -2,6 +2,7 @@ import { LitElement, html } from "../../../lib/lit.min.js";
 import { showConfirm } from "../../confirm.js";
 import { state } from "../../state.js";
 import { formatDate, todayStr } from "../../utils.js";
+import "../../components/noteAutocomplete.js";
 
 class MhVitals extends LitElement {
   static properties = {
@@ -34,12 +35,14 @@ class MhVitals extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this._onLangChange = () => this.requestUpdate();
-    window.addEventListener("languagechange", this._onLangChange);
+    document.addEventListener("language-changed", this._onLangChange);
+    document.addEventListener("translations-loaded", this._onLangChange);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    window.removeEventListener("languagechange", this._onLangChange);
+    document.removeEventListener("language-changed", this._onLangChange);
+    document.removeEventListener("translations-loaded", this._onLangChange);
   }
 
   load(memberId) {
@@ -52,7 +55,6 @@ class MhVitals extends LitElement {
     this.load(this.#memberId);
   }
 
-  // Collect unique past measurement names and units from this member's vitals
   #pastNames() {
     const names = new Set();
     for (const item of this._items) {
@@ -74,7 +76,7 @@ class MhVitals extends LitElement {
   }
 
   #mfValidate(rows) {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     for (const row of rows) {
       const hasName = row.name.trim() !== "";
       const hasValue = row.value.trim() !== "";
@@ -118,7 +120,7 @@ class MhVitals extends LitElement {
   }
 
   async #submitAdd() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     const date   = this.querySelector("#vitalAddDate").value;
     const weight = this.querySelector("#vitalAddWeight").value;
     const height = this.querySelector("#vitalAddHeight").value;
@@ -144,7 +146,7 @@ class MhVitals extends LitElement {
   }
 
   async #submitEdit() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     const id     = this.querySelector("#vitalEditId").value;
     const date   = this.querySelector("#vitalEditDate").value;
     const weight = this.querySelector("#vitalEditWeight").value;
@@ -215,7 +217,7 @@ class MhVitals extends LitElement {
   }
 
   #renderModalBody(prefix, measurements, onUpdate, onAdd, onRemove, errors) {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     return html`
       <div class="form-floating mb-3">
         <input type="date" id="${prefix}Date" class="form-control" placeholder="${t("vital.date", "Measurement Date")}" />
@@ -236,16 +238,19 @@ class MhVitals extends LitElement {
         </div>
       </div>
       ${this.#renderMeasurementsEditor(measurements, onUpdate, onAdd, onRemove, t)}
-      <div class="form-floating mb-3">
-        <textarea id="${prefix}Notes" class="form-control" placeholder="${t("label.notes", "Notes")}" style="height:70px"></textarea>
-        <label>${t("label.notes", "Notes")}</label>
-      </div>
+      <note-autocomplete
+        id="${prefix}Notes"
+        class="mb-3"
+        label=${t("label.notes", "Notes")}
+        placeholder=${t("label.notes", "Notes")}
+        .suggestions=${[...new Set(state.allVitalSigns.map((v) => v.Notes).filter(Boolean))]}
+      ></note-autocomplete>
       ${this.#renderErrors(errors)}
     `;
   }
 
   render() {
-    const t = (key, fallback) => window.localization?.t(key) ?? fallback;
+    const t = (key, fallback) => window.t?.(key, fallback) ?? fallback;
 
     const onAddMfUpdate = (i, field, value) => { this._addMeasurements = this._addMeasurements.map((r, idx) => idx === i ? { ...r, [field]: value } : r); };
     const onAddMfAdd    = () => { this._addMeasurements = [...this._addMeasurements, { name: "", value: "", unit: "" }]; };
