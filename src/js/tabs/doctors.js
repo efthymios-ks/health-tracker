@@ -199,9 +199,10 @@ class DoctorsTab extends LitElement {
     const selectedId = this[selectedKey];
     const toggleId = `${prefix}SpecialtyDropdownToggle`;
 
-    const sorted = [...this._specialties].sort((a, b) => (a.Id < b.Id ? -1 : a.Id > b.Id ? 1 : 0));
+    const label = (s) => lang === "el" ? (s.El || s.En) : s.En;
+    const sorted = [...this._specialties].sort((a, b) => label(a).localeCompare(label(b)));
     const filtered = searchVal
-      ? sorted.filter((s) => normalizeSearch(lang === "el" ? (s.El || s.En) : s.En).includes(normalizeSearch(searchVal)))
+      ? sorted.filter((s) => normalizeSearch(label(s)).includes(normalizeSearch(searchVal)))
       : sorted;
 
     const selectedSpecialty = this._specialties.find((s) => s.Id === selectedId);

@@ -186,11 +186,7 @@ class MhVitals extends LitElement {
   #renderMeasurementsEditor(rows, onUpdate, onAdd, onRemove, t) {
     const pastNames = this.#pastNames();
     const pastUnits = this.#pastUnits();
-    const namesId = "vital-past-names";
-    const unitsId = "vital-past-units";
     return html`
-      <datalist id="${namesId}">${pastNames.map((n) => html`<option value="${n}"></option>`)}</datalist>
-      <datalist id="${unitsId}">${pastUnits.map((u) => html`<option value="${u}"></option>`)}</datalist>
       <div class="mb-3">
         <div class="d-flex justify-content-between align-items-center mb-1">
           <label class="form-label mb-0 small"><i class="bi bi-activity me-1"></i>${t("vital.extra-measurements", "Extra Measurements")}</label>
@@ -198,17 +194,25 @@ class MhVitals extends LitElement {
         </div>
         ${rows.length ? rows.map((row, i) => html`
           <div class="d-flex gap-1 mb-1">
-            <input type="text" class="form-control form-control-sm" style="flex:2" .value=${row.name}
-              list="${namesId}"
-              placeholder="${t("vital.mf-name-placeholder", "Name")}"
-              @input=${(e) => onUpdate(i, "name", e.target.value)} />
+            <note-autocomplete
+              style="flex:2"
+              .plain=${true}
+              placeholder="${t("vital.mf-name-placeholder", "Measurement name")}"
+              .value=${row.name}
+              .suggestions=${pastNames}
+              @input=${(e) => onUpdate(i, "name", e.target.value)}
+            ></note-autocomplete>
             <input type="text" class="form-control form-control-sm" style="flex:2" .value=${row.value}
               placeholder="${t("vital.mf-value-placeholder", "Value")}"
               @input=${(e) => onUpdate(i, "value", e.target.value)} />
-            <input type="text" class="form-control form-control-sm" style="flex:1" .value=${row.unit}
-              list="${unitsId}"
+            <note-autocomplete
+              style="flex:1"
+              .plain=${true}
               placeholder="${t("vital.mf-unit-placeholder", "Unit")}"
-              @input=${(e) => onUpdate(i, "unit", e.target.value)} />
+              .value=${row.unit}
+              .suggestions=${pastUnits}
+              @input=${(e) => onUpdate(i, "unit", e.target.value)}
+            ></note-autocomplete>
             <button type="button" class="btn btn-sm btn-outline-danger px-2" @click=${() => onRemove(i)}><i class="bi bi-x-lg"></i></button>
           </div>`)
         : html`<div class="text-muted small">${t("vital.no-extra-measurements", "No extra measurements.")}</div>`}

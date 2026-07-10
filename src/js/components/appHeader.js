@@ -80,7 +80,7 @@ class AppHeader extends LitElement {
         style="width: 220px"
       >
         <div class="px-3 py-3 fw-bold text-white border-bottom border-white border-opacity-25 small">
-          🏥 Health Tracker
+          <img src="favicon.svg" width="20" height="20" alt="" style="vertical-align:-3px" class="me-1">Health Tracker
         </div>
         <div class="navbar-nav flex-column p-2 flex-grow-1 gap-1">
           ${TABS.map((tab) => navItem(tab, currentLanguage))}
@@ -95,7 +95,7 @@ class AppHeader extends LitElement {
         id="mobileOffcanvas"
       >
         <div class="offcanvas-header border-bottom border-white border-opacity-25">
-          <h6 class="offcanvas-title fw-bold text-white">🏥 Health Tracker</h6>
+          <h6 class="offcanvas-title fw-bold text-white"><img src="favicon.svg" width="20" height="20" alt="" style="vertical-align:-3px" class="me-1">Health Tracker</h6>
           <button
             type="button"
             class="btn-close btn-close-white"
@@ -129,7 +129,7 @@ class AppHeader extends LitElement {
         style="z-index: 1030"
       >
         <div class="container-fluid">
-          <span class="navbar-brand fw-bold">🏥 Health Tracker</span>
+          <span class="navbar-brand fw-bold"><img src="favicon.svg" width="20" height="20" alt="" style="vertical-align:-3px" class="me-1">Health Tracker</span>
           <button
             class="navbar-toggler border-0"
             type="button"

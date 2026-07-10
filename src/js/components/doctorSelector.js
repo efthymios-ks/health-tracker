@@ -56,9 +56,11 @@ class DoctorSelector extends LitElement {
     const filter      = this._specialtyFilter;
     const searchVal   = this._specialtySearch;
 
-    const visible = searchVal
-      ? specialties.filter((s) => normalizeSearch(lang === "el" ? (s.El || s.En) : s.En).includes(normalizeSearch(searchVal)))
-      : specialties;
+    const label = (s) => lang === "el" ? (s.El || s.En) : s.En;
+    const visible = (searchVal
+      ? specialties.filter((s) => normalizeSearch(label(s)).includes(normalizeSearch(searchVal)))
+      : [...specialties]
+    ).sort((a, b) => label(a).localeCompare(label(b)));
 
     const filterLabel = filter.size === 0
       ? html`<span class="text-muted">${t("appt.all-specialties", "All Specialties")}</span>`

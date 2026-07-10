@@ -78,12 +78,13 @@ class BilingualLookupSection extends LitElement {
   }
 
   #filtered() {
-    if (!this.#search) { return this._items; }
-    return this._items.filter((item) =>
-      normalizeSearch(item.En).includes(this.#search) ||
-      normalizeSearch(item.El).includes(this.#search) ||
-      normalizeSearch(item.Id).includes(this.#search)
-    );
+    const items = this.#search
+      ? this._items.filter((item) =>
+          normalizeSearch(item.En).includes(this.#search) ||
+          normalizeSearch(item.El).includes(this.#search) ||
+          normalizeSearch(item.Id).includes(this.#search))
+      : [...this._items];
+    return items.sort((a, b) => this.#displayName(a).localeCompare(this.#displayName(b)));
   }
 
   #openAdd() {

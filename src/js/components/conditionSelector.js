@@ -41,10 +41,11 @@ class ConditionSelector extends LitElement {
     const t    = (key, fallback) => window.t?.(key, fallback) ?? fallback;
     const lang = window.getLanguage?.() || "en";
 
-    const filtered = this._search
-      ? state.allMedicalConditions.filter((c) =>
-          normalizeSearch(lang === "el" ? (c.El || c.En) : c.En).includes(normalizeSearch(this._search)))
-      : state.allMedicalConditions;
+    const label = (c) => lang === "el" ? (c.El || c.En) : c.En;
+    const filtered = (this._search
+      ? state.allMedicalConditions.filter((c) => normalizeSearch(label(c)).includes(normalizeSearch(this._search)))
+      : [...state.allMedicalConditions]
+    ).sort((a, b) => label(a).localeCompare(label(b)));
 
     const selectedId = (this.optional && this.selectedConditionId === "") || filtered.find((c) => c.Id === this.selectedConditionId)
       ? this.selectedConditionId
